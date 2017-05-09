@@ -24,7 +24,7 @@ PERFORMANCE OF THIS SOFTWARE.
 ## Installation
 East only requires a standard Python3(.5+) installation and is not tied to any
 particular location. As such, installation can be done using either the
-`setup.py` script to install into a global location. Alternatively, the 'East'
+`setup.py` script to install into a global location or the 'East'
 folder can be copied into  `$HOME/.local/lib/python3.5/site-packages` for local
 (per user) installation.
 
