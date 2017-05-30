@@ -57,6 +57,13 @@ documented by `East/Report.py`.
 #### Results
 Either a text report, script.py_cov.txt, or the HTML equivalent.
 
+### East.Calls
+Analyzer for generating a list of all classes and functions defined by a given
+script.
+
+#### Results
+A simple report is written to standard output.
+
 ## Example
 A complete example of using and running the tools is provided in the 'Examples/'
 directory of the github distribution
