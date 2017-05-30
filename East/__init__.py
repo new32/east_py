@@ -18,5 +18,6 @@ from .Test import Test
 from .Coverage import Coverage
 from .Instrument import Instrument
 from .Report import Report
+from .Calls import Calls
 
-__all__ = ["Test", "Coverage", "Instrument", "Report"]
+__all__ = ["Test", "Coverage", "Instrument", "Report", "Calls"]
