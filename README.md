@@ -41,7 +41,7 @@ always specify a different file. The format is documented by `East/Test.py`.
 
 ### East.Instrument
 This program instruments a named library, adding condition, decision and basic
-block coverage, compiling the the modified AST into bytecode. To use the
+block coverage, compiling the modified AST into bytecode. To use the
 instrumented AST, simply import the library like normal into the test driver.
 
 #### Results
@@ -51,7 +51,7 @@ instrumented file, .ecov stores all the coverage obtained by the run.
 As the file is appended to, coverage can be captured in subsequent runs.
 
 ### East.Report
-Merges the .edat and .ecov files into either a single report. The format is
+Merges the .edat and .ecov files into a single report. The format is
 documented by `East/Report.py`.
 
 #### Results
