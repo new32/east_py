@@ -1,0 +1,133 @@
+edat:      /storage/emulated/0/DCIM/east_py/Example/ExampleLib.edat
+ecov:      /storage/emulated/0/DCIM/east_py/Example/ExampleLib.ecov
+source:    /storage/emulated/0/DCIM/east_py/Example/ExampleLib.py
+generated: 2019-01-18 07:50:45
+
+=====
+Line   #000001|#!/usr/bin/env python3
+Line   #000002|
+Line   #000003|class Test1:
+Line   #000004|  VARIABLE_X = 1
+Line   #000005|  def __init__(self):
+Line   #000006|    # only done as a class for testing purposes
+Line + #000007|    pass
+Line   #000008|
+Line   #000009|  def and_test(self,
+Line   #000010|    in_a,
+Line   #000011|    in_b,
+Line   #000012|    in_c):
+Line + #000013|    return (in_a
+000013.012|T/F|            ^
+Line   #000014|            and in_b
+000014.016|T/F|                ^
+Line   #000015|            and in_c)
+000015.016|T/F|                ^
+Line   #000016|
+Line   #000017|  def or_test(self, in_a, in_b, in_c):
+Line + #000018|    return in_a or in_b or in_c
+000018.011|T/F|           ^
+000018.019|T/F|                   ^
+000018.027|T/F|                           ^
+Line   #000019|
+Line   #000020|  def xor_test(self, in_a, in_b):
+Line + #000021|    return (in_a or in_b) and not (in_a and in_b)
+000021.012|T/F|            ^
+000021.020|T/F|                    ^
+000021.030|T/F|                              ^
+000021.035|T/F|                                   ^
+000021.044|T/F|                                            ^
+Line   #000022|
+Line   #000023|  def if_test1(self, in_a, in_b):
+Line + #000024|    ret_val = -1
+Line   #000025|    if (in_a
+000025.004|T/F|    ^
+000025.008|T/F|        ^
+Line   #000026|        and in_b):
+000026.012|T/F|            ^
+Line + #000027|      ret_val = 1
+Line   #000028|    elif in_a:
+000028.004|T/F|    ^
+Line + #000029|      ret_val = 2
+Line   #000030|    elif in_b:
+000030.004|T/F|    ^
+Line + #000031|      ret_val = 3
+Line   #000032|    return ret_val
+Line   #000033|
+Line   #000034|  def if_test2(self, in_a):
+Line + #000035|    ret_val = -1
+Line   #000036|    if in_a:
+000036.004|T/F|    ^
+Line + #000037|      ret_val = 1
+Line   #000038|    return ret_val
+Line   #000039|
+Line   #000040|  def if_test3(self, in_a):
+Line + #000041|    return -1 if not in_a else 1
+000041.014|T/F|              ^
+000041.017|T/F|                 ^
+Line   #000042|
+Line   #000043|  def for_test1(self, for_vals):
+Line + #000044|    ret_val = 0
+Line   #000045|    for aval in for_vals:
+000045.004|T/F|    ^
+Line + #000046|      ret_val += int(aval)
+Line   #000047|    else:
+Line + #000048|      ret_val = -1
+Line   #000049|    return ret_val
+Line   #000050|
+Line   #000051|  def for_test2(self, in_val):
+Line + #000052|    ret_val = 0
+Line   #000053|    for a_val in ["AA", "AB", "BA"]:
+000053.004|T/*|    ^
+Line + #000054|      if in_val != a_val:
+000054.006|T/F|      ^
+000054.009|T/F|         ^
+Line + #000055|        ret_val += 1
+Line   #000056|        break
+Line   #000057|    else:
+Line * #000058|      ret_val += 100
+Line   #000059|    return ret_val
+Line   #000060|
+Line   #000061|  def for_test3(self):
+Line + #000062|    return list([x for x in range(1000000) if x%4])
+Line   #000063|
+Line   #000064|  def while_test1(self, loop_count):
+Line + #000065|    count = 0
+Line   #000066|    while count < loop_count:
+000066.004|T/F|    ^
+000066.010|T/F|          ^
+Line + #000067|      count += 1
+Line   #000068|    return count
+Line   #000069|
+Line   #000070|  def while_test2(self, loop_count, limit):
+Line + #000071|    count = 0
+Line   #000072|    while count < loop_count:
+000072.004|T/F|    ^
+000072.010|T/F|          ^
+Line + #000073|      count += 1
+Line   #000074|      if count == limit:
+000074.006|T/F|      ^
+000074.009|T/F|         ^
+Line + #000075|        count = 0
+Line   #000076|        break
+Line   #000077|    else:
+Line + #000078|      count += 100
+Line   #000079|    return count
+Line   #000080|
+Line   #000081|  def value_in_list(self, val, flag):
+Line + #000082|    return ((val in ["AA", "BB", "CC"])
+000082.013|T/F|             ^
+Line   #000083|            and flag)
+000083.016|T/F|                ^
+Line   #000084|
+Line   #000085|  def chain(self, in_a):
+Line + #000086|    return (0 <= in_a <= 10)
+000086.012|T/F|            ^
+000086.017|T/F|                 ^
+=====
+
+Decisions:  00010/00011
+Conditions: 00022/00022
+Blocks:     00026/00027
+
+Missing F case    |000053.004|T/*
+Missing T case    |000058.006|*/X

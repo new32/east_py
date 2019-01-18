@@ -1,0 +1,294 @@
+# == Test 001 : TrialDriver.logicalAndTests
+# Function Under Test:
+#   Test1.and_test
+# Given no input
+# When all parameters are True
+# Then the result is True
+Case 001 : Pass : True == True 
+# When the last parameter is False and all others are True
+# Then the result is False
+Case 002 : Pass : False == False 
+# When the middle parameter is False and all others are True
+# Then the result is False
+Case 003 : Pass : False == False 
+# When the first parameter is False and all others are True
+# Then the result is False
+Case 004 : Pass : False == False 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..4
+Pass 4/4
+Fail 0/4
+Test 001 (TrialDriver.logicalAndTests) Ok
+
+
+# == Test 002 : TrialDriver.logicalOrTests
+# Function Under Test:
+#   Test1.or_test
+# Given no input
+# When all parameters are False
+# Then the result is False
+Case 001 : Pass : False == False 
+# When the last parameter is True and all others are False
+# Then the result is True
+Case 002 : Pass : True == True 
+# When the middle parameter is True and all others are False
+# Then the result is True
+Case 003 : Pass : True == True 
+# When the first parameter is True and all others are False
+# Then the result is True
+Case 004 : Pass : True == True 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..4
+Pass 4/4
+Fail 0/4
+Test 002 (TrialDriver.logicalOrTests) Ok
+
+
+# == Test 003 : TrialDriver.test5
+# XOR Test:
+Case 001 : Pass : True == True 
+Case 002 : Pass : True == True 
+Case 003 : Pass : False == False 
+Case 004 : Pass : False == False 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..4
+Pass 4/4
+Fail 0/4
+Test 003 (TrialDriver.test5) Ok
+
+
+# == Test 004 : TrialDriver.test6
+# IF#1
+Case 001 : Pass : 1 == 1 
+Case 002 : Pass : 2 == 2 
+Case 003 : Pass : 3 == 3 
+Case 004 : Pass : -1 == -1 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..4
+Pass 4/4
+Fail 0/4
+Test 004 (TrialDriver.test6) Ok
+
+
+# == Test 005 : TrialDriver.test7
+# IF#2
+Case 001 : Pass : 1 == 1 
+Case 002 : Pass : -1 == -1 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..2
+Pass 2/2
+Fail 0/2
+Test 005 (TrialDriver.test7) Ok
+
+
+# == Test 006 : TrialDriver.test8
+# IF#3
+Case 001 : Pass : 1 == 1 
+Case 002 : Pass : -1 == -1 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..2
+Pass 2/2
+Fail 0/2
+Test 006 (TrialDriver.test8) Ok
+
+
+# == Test 007 : TrialDriver.test9
+# FOR#1
+# Invalid list
+# Exception on iteration 0 - TypeError: 'NoneType' object is not iterable
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..0
+Pass 0/0
+Fail 0/0
+Test 007 (TrialDriver.test9) Not Ok
+
+
+# == Test 008 : TrialDriver.test10
+# FOR#1
+# Valid list...of strings
+# Exception on iteration 0 - ValueError: invalid literal for int() with base 10: 'AA'
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..0
+Pass 0/0
+Fail 0/0
+Test 008 (TrialDriver.test10) Not Ok
+
+
+# == Test 009 : TrialDriver.test11
+# FOR#1
+# Valid list...of ints!
+Case 001 : Fail : 7 == -1 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..1
+Pass 0/1
+Fail 1/1
+Test 009 (TrialDriver.test11) Not Ok
+
+
+# == Test 010 : TrialDriver.test12
+# FOR#2
+# Mismatch input
+Case 001 : Pass : 1 == 1 
+# Complete loop/Execute 'Else'
+Case 002 : Fail : 100 == 1 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..2
+Pass 1/2
+Fail 1/2
+Test 010 (TrialDriver.test12) Not Ok
+
+
+# == Test 011 : TrialDriver.test13
+# WHILE#1
+# Iterate 0 times
+Case 001 : Pass : 0 == 0 
+# Iterate 1 time
+Case 002 : Pass : 1 == 1 
+# Iterate N times
+Case 003 : Pass : 10 == 10 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..3
+Pass 3/3
+Fail 0/3
+Test 011 (TrialDriver.test13) Ok
+
+
+# == Test 012 : TrialDriver.test14
+# Function Under Test:
+#   Test1.while_test2
+# Iterate 0 times, Limit of 5
+Case 001 : Pass : 100 == 100 
+# Iterate 1 time, Limit of 5
+Case 002 : Pass : 101 == 101 
+# Iterate 4 times, Limit of 5
+Case 003 : Pass : 104 == 104 
+# Iterate 5 times, Limit of 5
+Case 004 : Pass : 0 == 0 
+# Iterate N times, Limit of 5
+Case 005 : Pass : 0 == 0 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..5
+Pass 5/5
+Fail 0/5
+Test 012 (TrialDriver.test14) Ok
+
+
+# == Test 013 : TrialDriver.test15
+# Function Under Test:
+#   Test1.value_in_list
+# Checking for None, True
+Case 001 : Pass : False == False 
+# Checking for AA, False
+Case 002 : Pass : False == False 
+# Checking for AA, True
+Case 003 : Pass : True == True 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..3
+Pass 3/3
+Fail 0/3
+Test 013 (TrialDriver.test15) Ok
+
+
+# == Test 014 : TrialDriver.test16
+# Chain
+# Input is too small
+Case 001 : Pass : False == False 
+# Input is too large
+Case 002 : Pass : False == False 
+# Input is just right
+Case 003 : Pass : True == True 
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..3
+Pass 3/3
+Fail 0/3
+Test 014 (TrialDriver.test16) Ok
+
+
+# == Test 015 : TrialDriver.test17
+# Function Under Test:
+#   Test1.chain
+# Description:
+#   Do some really amazing and awesome testing of the function
+#   under test while being the bestest at testing
+# SUSPENDED:
+# Forgot what I was doing...
+#   'Stop' encountered
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..0
+Pass 0/0
+Fail 0/0
+Test 015 (TrialDriver.test17) Ok
+
+
+# == Test 016 : TrialDriver.test18
+# Function Under Test:
+#   Test1.chain
+# Description:
+#   Iterate through all values from 0 until death
+# 0 within range
+Case 001 : Pass : Not (True == False) 
+# 1 within range
+Case 002 : Pass : Not (True == False) 
+# 2 within range
+Case 003 : Pass : Not (True == False) 
+# 3 within range
+Case 004 : Pass : Not (True == False) 
+# 4 within range
+Case 005 : Pass : Not (True == False) 
+# 5 within range
+Case 006 : Pass : Not (True == False) 
+# 6 within range
+Case 007 : Pass : Not (True == False) 
+# 7 within range
+Case 008 : Pass : Not (True == False) 
+# 8 within range
+Case 009 : Pass : Not (True == False) 
+# 9 within range
+Case 010 : Pass : Not (True == False) 
+# 10 within range
+Case 011 : Pass : Not (True == False) 
+# 11 within range
+Case 012 : Stop : Not (False == False) 
+#   'Stop' encountered
+# -- Summary
+Date 2019-01-18 07:52:12
+Plan 1..12
+Pass 11/12
+Fail 1/12
+Test 016 (TrialDriver.test18) Not Ok
+
+
+# == Test 017 : TrialDriver.test19
+# FOR#3
+# -- Summary
+Date 2019-01-18 07:52:17
+Plan 1..0
+Pass 0/0
+Fail 0/0
+Test 017 (TrialDriver.test19) Ok
+
+
+# --
+# The following suites contain failures:
+#   007
+#   008
+#   009
+#   010
+#   016
+# Executed: ExampleTest.py
+# Report generated on 2019-01-18 07:52:18

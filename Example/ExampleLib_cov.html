@@ -1,0 +1,153 @@
+<html>
+<head>
+<title>ExampleLib.edat</title>
+<style type="text/css">
+BODY {font-family: Monospace}
+TABLE.listing {border-style: none}
+TD.listing {font-family: Monospace}
+TD.summary {font-family: Monospace}
+.failed {background-color: LightPink}
+.passed {color: DarkGreen}
+.block_miss {background-color: LightPink}
+.block_hit {color: DarkGreen}
+.summary_miss {color: DarkRed}
+.summary_pass {color: DarkGreen}
+</style>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<table class="listing"><tr><td class="header"><pre>
+edat:      /storage/emulated/0/DCIM/east_py/Example/ExampleLib.edat
+ecov:      /storage/emulated/0/DCIM/east_py/Example/ExampleLib.ecov
+source:    /storage/emulated/0/DCIM/east_py/Example/ExampleLib.py
+generated: 2019-01-18 07:59:21
+
+</pre></td></tr><tr><td class="listing"><pre>
+Line   #000001|#!/usr/bin/env python3
+Line   #000002|
+Line   #000003|class Test1:
+Line   #000004|  VARIABLE_X = 1
+Line   #000005|  def __init__(self):
+Line   #000006|    # only done as a class for testing purposes
+<span class="block_hit">Line + #000007|    pass</span>
+Line   #000008|
+Line   #000009|  def and_test(self,
+Line   #000010|    in_a,
+Line   #000011|    in_b,
+Line   #000012|    in_c):
+<span class="block_hit">Line + #000013|    return (in_a</span>
+<span class="passed">000013.012|T/F|            ^</span>
+Line   #000014|            and in_b
+<span class="passed">000014.016|T/F|                ^</span>
+Line   #000015|            and in_c)
+<span class="passed">000015.016|T/F|                ^</span>
+Line   #000016|
+Line   #000017|  def or_test(self, in_a, in_b, in_c):
+<span class="block_hit">Line + #000018|    return in_a or in_b or in_c</span>
+<span class="passed">000018.011|T/F|           ^</span>
+<span class="passed">000018.019|T/F|                   ^</span>
+<span class="passed">000018.027|T/F|                           ^</span>
+Line   #000019|
+Line   #000020|  def xor_test(self, in_a, in_b):
+<span class="block_hit">Line + #000021|    return (in_a or in_b) and not (in_a and in_b)</span>
+<span class="passed">000021.012|T/F|            ^</span>
+<span class="passed">000021.020|T/F|                    ^</span>
+<span class="passed">000021.030|T/F|                              ^</span>
+<span class="passed">000021.035|T/F|                                   ^</span>
+<span class="passed">000021.044|T/F|                                            ^</span>
+Line   #000022|
+Line   #000023|  def if_test1(self, in_a, in_b):
+<span class="block_hit">Line + #000024|    ret_val = -1</span>
+Line   #000025|    if (in_a
+<span class="passed">000025.004|T/F|    ^</span>
+<span class="passed">000025.008|T/F|        ^</span>
+Line   #000026|        and in_b):
+<span class="passed">000026.012|T/F|            ^</span>
+<span class="block_hit">Line + #000027|      ret_val = 1</span>
+Line   #000028|    elif in_a:
+<span class="passed">000028.004|T/F|    ^</span>
+<span class="block_hit">Line + #000029|      ret_val = 2</span>
+Line   #000030|    elif in_b:
+<span class="passed">000030.004|T/F|    ^</span>
+<span class="block_hit">Line + #000031|      ret_val = 3</span>
+Line   #000032|    return ret_val
+Line   #000033|
+Line   #000034|  def if_test2(self, in_a):
+<span class="block_hit">Line + #000035|    ret_val = -1</span>
+Line   #000036|    if in_a:
+<span class="passed">000036.004|T/F|    ^</span>
+<span class="block_hit">Line + #000037|      ret_val = 1</span>
+Line   #000038|    return ret_val
+Line   #000039|
+Line   #000040|  def if_test3(self, in_a):
+<span class="block_hit">Line + #000041|    return -1 if not in_a else 1</span>
+<span class="passed">000041.014|T/F|              ^</span>
+<span class="passed">000041.017|T/F|                 ^</span>
+Line   #000042|
+Line   #000043|  def for_test1(self, for_vals):
+<span class="block_hit">Line + #000044|    ret_val = 0</span>
+Line   #000045|    for aval in for_vals:
+<span class="passed">000045.004|T/F|    ^</span>
+<span class="block_hit">Line + #000046|      ret_val += int(aval)</span>
+Line   #000047|    else:
+<span class="block_hit">Line + #000048|      ret_val = -1</span>
+Line   #000049|    return ret_val
+Line   #000050|
+Line   #000051|  def for_test2(self, in_val):
+<span class="block_hit">Line + #000052|    ret_val = 0</span>
+Line   #000053|    for a_val in ["AA", "AB", "BA"]:
+<span class="failed">000053.004|T/*|    ^</span>
+<span class="block_hit">Line + #000054|      if in_val != a_val:</span>
+<span class="passed">000054.006|T/F|      ^</span>
+<span class="passed">000054.009|T/F|         ^</span>
+<span class="block_hit">Line + #000055|        ret_val += 1</span>
+Line   #000056|        break
+Line   #000057|    else:
+<span class="block_miss">Line * #000058|      ret_val += 100</span>
+Line   #000059|    return ret_val
+Line   #000060|
+Line   #000061|  def for_test3(self):
+<span class="block_hit">Line + #000062|    return list([x for x in range(1000000) if x%4])</span>
+Line   #000063|
+Line   #000064|  def while_test1(self, loop_count):
+<span class="block_hit">Line + #000065|    count = 0</span>
+Line   #000066|    while count < loop_count:
+<span class="passed">000066.004|T/F|    ^</span>
+<span class="passed">000066.010|T/F|          ^</span>
+<span class="block_hit">Line + #000067|      count += 1</span>
+Line   #000068|    return count
+Line   #000069|
+Line   #000070|  def while_test2(self, loop_count, limit):
+<span class="block_hit">Line + #000071|    count = 0</span>
+Line   #000072|    while count < loop_count:
+<span class="passed">000072.004|T/F|    ^</span>
+<span class="passed">000072.010|T/F|          ^</span>
+<span class="block_hit">Line + #000073|      count += 1</span>
+Line   #000074|      if count == limit:
+<span class="passed">000074.006|T/F|      ^</span>
+<span class="passed">000074.009|T/F|         ^</span>
+<span class="block_hit">Line + #000075|        count = 0</span>
+Line   #000076|        break
+Line   #000077|    else:
+<span class="block_hit">Line + #000078|      count += 100</span>
+Line   #000079|    return count
+Line   #000080|
+Line   #000081|  def value_in_list(self, val, flag):
+<span class="block_hit">Line + #000082|    return ((val in ["AA", "BB", "CC"])</span>
+<span class="passed">000082.013|T/F|             ^</span>
+Line   #000083|            and flag)
+<span class="passed">000083.016|T/F|                ^</span>
+Line   #000084|
+Line   #000085|  def chain(self, in_a):
+<span class="block_hit">Line + #000086|    return (0 <= in_a <= 10)</span>
+<span class="passed">000086.012|T/F|            ^</span>
+<span class="passed">000086.017|T/F|                 ^</span>
+</pre></td></tr><tr><td class="summary"><pre>
+
+Decisions:  <span class="summary_miss">00010/00011</span>
+Conditions: <span class="summary_pass">00022/00022</span>
+Blocks:     <span class="summary_miss">00026/00027</span>
+
+Missing F case    |000053.004|T/*
+Missing T case    |000058.006|*/X
+</pre></td></tr></table></body></html>
