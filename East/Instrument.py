@@ -18,6 +18,7 @@ import ast
 import os
 import sys
 import tokenize
+import re
 
 """
 Python script instrumentor for condition, decision and basic block coverage.
@@ -63,7 +64,7 @@ Caveats:
   Line   #000001|def example():
   Line + #000002|  call1()
   Line   #000003|  if call2()
-  000003.004|T/*|    call2
+  000003.004|T/*|     ^
   Line + #000004|    return
   Line   #000005|  call3()
 
@@ -74,14 +75,14 @@ Caveats:
   Line   #000001|def example():
   Line + #000002|  call1()
   Line   #000003|  if not call2()
-  000003.006|*/F|
-  000003.004|T/*|         call2
+  000003.006|*/F|     ^
+  000003.004|T/*|         ^
   Line * #000004|    call3()
 
   This is a clearer implementation of the intention of the example() function,
   to execute call3() only if call2() is False.
 """
-# ======================================================================
+# ==
 class TokenList:
   """
   Inner class.
@@ -99,17 +100,21 @@ class TokenList:
       self.tokens = dict()
       for token in old_tokens:
         # this will forcibly overwrite dedents which aren't cared about anyway
-        loc = ("%d.%d" % token.start)
+        loc = ("%05d.%03d" % token.start)
         if loc not in self.token_locations:
           self.token_locations.append(loc)
         self.tokens[loc] = token
-  # --------------------------------------------------------------------
+  # --
   def get_true_location(self, keyword, location):
+    # Move backwards up the token list searching for the first
+    # matching instance of keyword
     ret_val = location
     if self.tokens and location in self.token_locations:
-      labels = ["if", "elif"]
-      if keyword == "while":
-        labels = ["while"]
+      labels = [keyword]
+      if keyword == "if":
+        # If tokens can either be a true "If" or part of "Elif"
+        # so both have to be searched for
+        labels = ["if", "elif"]
       index = self.token_locations.index(location)
       while index >= 0:
         token = self.tokens[self.token_locations[index]]
@@ -118,7 +123,7 @@ class TokenList:
           break
         index -= 1
     return ret_val
-# ======================================================================
+# ==
 class Instrument(ast.NodeTransformer):
   """
   Perform instrumentation on the specified source file.
@@ -126,71 +131,75 @@ class Instrument(ast.NodeTransformer):
   If called programatically, the optional parameter of 'run', when set True,
   will execute the instrumented AST (which itself will not be saved).
   """
-  def __init__(self, filename, run=False):
+  def __init__(self, filename, embedded=False, generator_ifs=False):
     # file info...
     self.filename = os.path.abspath(filename)
-    self.basename = os.path.basename(filename)
+    self.basename = re.sub("\.py$", "", os.path.basename(filename))
     self.contents = ""
     # state info...
-    self.block_count = 0
-    self.block_locations = list()
-    self.decision_count = 0
-    self.decision_locations = list()
-    self.condition_count = 0
-    self.condition_locations = list()
+    self.b_coverage = list()
+    self.d_coverage = list()
+    self.c_coverage = list()
+    self.sc_lines = list() # track lines that already have statement coverage
+    self.sc_excludes = [
+      ast.FunctionDef, ast.AsyncFunctionDef,
+      ast.ClassDef, ast.arg,
+      ast.Import, ast.ImportFrom
+    ]
     # ...everything else
+    self.embedded = embedded
+    self.parse_generator_ifs = generator_ifs
     self.tokens = TokenList(self.filename)
     with open(self.filename, "r") as FIN:
       for line in FIN:
         self.contents += line
     if self.contents:
-      with open(self.filename + ".edat", "w") as self.edat:
+      with open(re.sub("\.py$", ".edat",self.filename), "w") as self.edat:
         import __main__
         print(self.filename, file=self.edat)
-        translation_unit = self.visit(ast.parse(self.contents,filename=self.filename))
+        root = ast.parse(self.contents,filename=self.filename)
+        translation_unit = self.visit(root)
 
         ast_object = compile(translation_unit, filename=self.basename, mode="exec")
-        if run:
-          exec(ast_object, __main__.__dict__, __main__.__dict__)
-        else:
-          # setup to manually write the __pycache__ folder for the instrumented
-          # source files. This way, the test author only has to import the
-          # instrumented files into the test driver to get the modified
-          # AST/coverage to work.
-          import builtins
-          import py_compile
-          def my_compile(source, filename, mode, flags=0, dont_inherit=False, optimize=-1):
-            return ast_object
-          builtin_compile = builtins.compile
-          builtins.compile = my_compile
-          py_compile.compile(self.filename)
-          builtins.compile = builtin_compile
-  # --------------------------------------------------------------------
-  def _add_statement(self, node_body):
+
+        # setup to manually write the __pycache__ folder for the instrumented
+        # source files. This way, the test author only has to import the
+        # instrumented files into the test driver to get the modified
+        # AST/coverage to work.
+        import builtins
+        import py_compile
+        def my_compile(source, filename, mode, flags=0, dont_inherit=False, optimize=-1):
+          return ast_object
+        builtin_compile = builtins.compile
+        builtins.compile = my_compile
+        py_compile.compile(self.filename)
+        builtins.compile = builtin_compile
+  # --
+  def _get_location(self, node):
+    return "%05d.%03d" % (node.lineno, node.col_offset)
+  # --
+  def _add_block(self, node_body):
     cov_line = None
-    location = "%d.%d" % (node_body[0].lineno, node_body[0].col_offset)
-    if location not in self.block_locations:
-      self.block_locations.append(location)
-      label = "BL" + str(self.block_count)
-      print("%s:%s:BLOCK" %
-            (label, location), file=self.edat)
-      self.block_count += 1
-      cov_line = ast.parse("east_coverage.statement(\"%s\")" % label).body[0]
+    location = self._get_location(node_body[0])
+    if location not in self.b_coverage and node_body[0].lineno not in self.sc_lines:
+      self.b_coverage.append(location)
+      self.sc_lines.append(node_body[0].lineno)
+      label = location + ":B"
+      print(label, file=self.edat)
+      cov_line = ast.parse("east_coverage.block(\"%s\")" % label).body[0]
       ast.copy_location(cov_line, node_body[0])
       node_body.insert(0, cov_line)
-  # --------------------------------------------------------------------
+  # --
   def _add_decision(self, keyword, old_test):
     dec_line = old_test
-    location = "%d.%d" % (old_test.lineno, old_test.col_offset)
-    if location not in self.decision_locations:
-      self.decision_locations.append(location)
-      label = "BR" + str(self.decision_count)
+    location = self._get_location(old_test)
+    if location not in self.d_coverage:
+      self.d_coverage.append(location)
       # have to fix the location in order to accurately report the keyword,
       # rather than the test
       fixed_location = self.tokens.get_true_location(keyword, location)
-      print("%s:%s:%s" %
-            (label, fixed_location, self.tokens.tokens[fixed_location].string), file=self.edat)
-      self.decision_count += 1
+      label = fixed_location + ":D"
+      print(label, file=self.edat)
       dec_line = ast.Call()
       dec_line.func = ast.Attribute(attr="decision", ctx=ast.Load(),
         value=ast.Name("east_coverage", ast.Load()))
@@ -200,16 +209,14 @@ class Instrument(ast.NodeTransformer):
       ast.copy_location(dec_line, old_test)
       ast.fix_missing_locations(dec_line)
     return dec_line
-  # --------------------------------------------------------------------
+  # --
   def _add_condition(self, text, cond_node):
     cd_line = cond_node
-    location = "%d.%d" % (cond_node.lineno, cond_node.col_offset)
-    if location not in self.condition_locations:
-      self.condition_locations.append(location)
-      label = "CD" + str(self.condition_count)
-      print("%s:%s:%s" %
-            (label, location, text), file=self.edat)
-      self.condition_count += 1
+    location = self._get_location(cond_node)
+    if location not in self.c_coverage:
+      self.c_coverage.append(location)
+      label = location + ":C"
+      print(label, file=self.edat)
       cd_line = ast.Call()
       cd_line.func = ast.Attribute(attr="condition", ctx=ast.Load(),
         value=ast.Name("east_coverage", ast.Load()))
@@ -219,7 +226,10 @@ class Instrument(ast.NodeTransformer):
       ast.copy_location(cd_line, cond_node)
       ast.fix_missing_locations(cd_line)
     return cd_line
-  # --------------------------------------------------------------------
+  # --
+  def visit(self, node):
+    return super().visit(node)
+  # --
   def visit_Module(self, module_node):
     imports = list()
     statements = list()
@@ -240,84 +250,88 @@ class Instrument(ast.NodeTransformer):
       east_import.lineno = imports[-1].lineno+1
 
     # setup and insert coverage tool
-    east_coverage = ast.parse("east_coverage = East.Coverage(\"%s\")" % (self.basename+".ecov")).body[0]
+    east_coverage = ast.parse("east_coverage = East.Coverage(ecov=\"%s\", use_console=%d)" %
+        (self.basename+".ecov", self.embedded)).body[0]
     east_coverage.col_offset = 1
     if statements:
       east_coverage.lineno = east_import.lineno+1
 
     body = imports + [east_import, east_coverage] + statements
     return ast.Module(body=body)
-  # --------------------------------------------------------------------
+  # --
   def visit_If(self, if_node):
-    # Add Coverage.statement for BODY and ELSE
+    # Add Coverage.block for BODY and ELSE
     # Add Coverage.decision for TEST
     self.generic_visit(if_node)
     if if_node.body:
-      self._add_statement(if_node.body)
+      self._add_block(if_node.body)
     if if_node.orelse:
       # prevent elif from being duplicated
       if not isinstance(if_node.orelse[0], ast.If):
-        self._add_statement(if_node.orelse)
+        self._add_block(if_node.orelse)
     if_node.test = self._add_decision("if", if_node.test)
     return if_node
-  # --------------------------------------------------------------------
+  # --
   def visit_IfExp(self, exp_node):
     # Add Coverage.decision for TEST
     self.generic_visit(exp_node)
     exp_node.test = self._add_decision("if", exp_node.test)
     return exp_node
-  # --------------------------------------------------------------------
+  # --
   def visit_While(self, while_node):
-    # Add Coverage.statement for BODY and ELSE
+    # Add Coverage.block for BODY and ELSE
     # Add Coverage.decision for TEST
     self.generic_visit(while_node)
     if while_node.body:
-      self._add_statement(while_node.body)
+      self._add_block(while_node.body)
     if while_node.orelse:
-      self._add_statement(while_node.orelse)
+      self._add_block(while_node.orelse)
     while_node.test = self._add_decision("while", while_node.test)
     return while_node
-  # --------------------------------------------------------------------
+  # --
   def visit_For(self, for_node):
-    # Add Coverage.statement for BODY and ELSE
+    # Add Coverage.block for BODY and ELSE
+    # Add Coverage.decision for ITER
     self.generic_visit(for_node)
     if for_node.body:
-      self._add_statement(for_node.body)
+      self._add_block(for_node.body)
     if for_node.orelse:
-      self._add_statement(for_node.orelse)
+      self._add_block(for_node.orelse)
+    # There is no 'test' as python FOR loops are always iterative
+    for_node.iter = self._add_decision("for", for_node.iter)
     return for_node
-  # --------------------------------------------------------------------
+  # --
   def visit_FunctionDef(self, func_node):
-    # Add Coverage.statement for BODY
+    # Add Coverage.block for BODY
     self.generic_visit(func_node)
     if func_node.body:
-      self._add_statement(func_node.body)
+      self._add_block(func_node.body)
     return func_node
-  # --------------------------------------------------------------------
+  # --
   def visit_Try(self, try_node):
-    # Add Coverage.statement for BODY, ELSE and FINAL
+    # Add Coverage.block for BODY, ELSE and FINAL
     self.generic_visit(try_node)
     if try_node.body:
-      self._add_statement(try_node.body)
+      self._add_block(try_node.body)
     if try_node.orelse:
-      self._add_statement(try_node.orelse)
+      self._add_block(try_node.orelse)
     if try_node.finalbody:
-      self._add_statement(try_node.finalbody)
+      self._add_block(try_node.finalbody)
     if try_node.handlers:
       for handler in try_node.handlers:
-        self._add_statement(handler.body)
+        self._add_block(handler.body)
     return try_node
-  # --------------------------------------------------------------------
+  # --
   def visit_UnaryOp(self, unary_node):
     self.generic_visit(unary_node)
     if isinstance(unary_node.op, ast.Not):
       unary_node = self._add_condition("not", unary_node)
     return unary_node
-  # --------------------------------------------------------------------
+  # --
   def visit_Compare(self, comp_node):
     self.generic_visit(comp_node)
     if len(comp_node.ops) == 1:
-      location = ("%d.%d" % (comp_node.lineno, comp_node.col_offset))
+      location = self._get_location(comp_node)
       text = self.tokens.tokens[location].string + "..."
       comp_node = self._add_condition(text, comp_node)
     else:
@@ -344,19 +358,62 @@ class Instrument(ast.NodeTransformer):
       ast.fix_missing_locations(decomposed)
       comp_node = self.visit_BoolOp(decomposed)
     return comp_node
-  # --------------------------------------------------------------------
+  # --
   def visit_BoolOp(self, bool_node):
     self.generic_visit(bool_node)
     index = 0
     count = len(bool_node.values)
     while index < count:
       a_node = bool_node.values[index]
-      location = ("%d.%d" % (a_node.lineno, a_node.col_offset))
+      location = self._get_location(a_node)
       text = self.tokens.tokens[location].string
       bool_node.values[index] = self._add_condition(text, a_node)
       index += 1
     return bool_node
-# ======================================================================
+  # --
+  def _parse_generators(self, comp_node):
+    self.generic_visit(comp_node)
+    if self.parse_generator_ifs:
+      # Push the generators and associated ifs into
+      # lists in-order to instrument the ifs decisions.
+      # Has to be done this way since the AST represents
+      # these as literal generators (using yield for the elements)
+      # since it's faster than lists. Because of that, you can't replace
+      # the generated nodes using "for" since it only reassigns
+      # the internal pointer within the loop; Using "for item in list"
+      # will get the instrumentation to show up in the report
+      # but no coverage can be obtained since the original node
+      # hasn't been replaced.
+      # Instrumenting these for the decisions adds considerable
+      # time for the execution since a list generator can literally
+      # be millions of expressions tested so this is disabled by default.
+      generators = [*comp_node.generators]
+      gen_len = len(generators)
+      gen_idx = 0
+      while gen_idx < gen_len:
+        if_exps = [*generators[gen_idx].ifs]
+        if_len = len(if_exps)
+        if_idx = 0
+        while if_idx < if_len:
+          if_exps[if_idx] = self._add_decision("if", if_exps[if_idx])
+          if_idx += 1
+        generators[gen_idx].ifs = if_exps
+        gen_idx += 1
+      comp_node.generators = generators
+    return comp_node
+  # --
+  def visit_ListComp(self, comp_node):
+    return self._parse_generators(comp_node)
+  # --
+  def visit_SetComp(self, comp_node):
+    return self._parse_generators(comp_node)
+  # --
+  def visit_DictComp(self, comp_node):
+    return self._parse_generators(comp_node)
+  # --
+  def visit_GeneratorExp(self, comp_node):
+    return self._parse_generators(comp_node)
+# ==
 if __name__ == "__main__":
   if len(sys.argv) > 1:
     args = sys.argv[1:]

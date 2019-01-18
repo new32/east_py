@@ -26,7 +26,7 @@ East.Report should be run as a command-line application:
 
 $> python3 -m East.Report <options> file1[, file2...]
 
-For conditions and branches, coverages are printed below the original source
+For conditions and decisions, coverages are printed below the original source
 and denote T/F status for each. A missing coverage is replaced with
 an asterisk (*).
 For blocks, coverages are printed within the margin in the Line area. If
@@ -36,7 +36,7 @@ In HTML mode, the report sets the foreground color based on the pass or
 fail status.
 """
 
-# ======================================================================
+# ==
 class CoverageEntry:
   """
   Inner class.
@@ -45,25 +45,27 @@ class CoverageEntry:
   encountered
   """
   def __init__(self):
-    self.label = ""
-    self.text = ""
+    self.coverage = ""
     self.line = 0
     self.column = 0
     self.trues = 0
     self.falses = 0
-  # --------------------------------------------------------------------
+  # --
   def hasTrue(self):
     return self.trues > 0
-  # --------------------------------------------------------------------
+  # --
   def hasFalse(self):
     ret_val = self.falses > 0
-    if ".CS" in self.label or "BL" in self.label:
+    if self.coverage == "S":
       ret_val = True
     return ret_val
-  # --------------------------------------------------------------------
+  # --
   def isFullyCovered(self):
-    return (self.hasTrue() and self.hasFalse())
-  # --------------------------------------------------------------------
+    ret_val = (self.hasTrue() and self.hasFalse())
+    if self.coverage == "B":
+      ret_val = self.hasTrue()
+    return ret_val
+  # --
   def to_string(self, start_at_zero):
     my_str  = "%0.6d.%0.3d|" % (self.line,self.column)
     if self.trues > 0:
@@ -71,9 +73,9 @@ class CoverageEntry:
     else:
       my_str += "*"
     my_str += "/"
-    # Case labels and Blocks can only ever be "Hit" or "Not Hit"
+    # Blocks can only ever be "Hit" or "Not Hit"
     # so don't attempt to display a False coverage
-    if not "CS" in self.label and not "BL" in self.label:
+    if self.coverage != "B":
       if self.falses > 0:
         my_str += "F"
       else:
@@ -87,12 +89,12 @@ class CoverageEntry:
     while idx < self.column:
       my_str += " "
       idx += 1
-    my_str += self.text
+    my_str += "^"
     return my_str
-  # --------------------------------------------------------------------
+  # --
   def __repr__(self):
     return self.to_string(False)
-# ======================================================================
+# ==
 class CoverageData:
   """
   Inner class.
@@ -104,22 +106,21 @@ class CoverageData:
     self.edat = edat
     self.ecov = ecov
     self.source = source
-    self.switches = dict()
-    self.branches = dict()
+    self.decisions = dict()
     self.conditions = dict()
     self.blocks = dict()
     self.entries_by_line = dict()
     self.block_lines = dict()
-  # --------------------------------------------------------------------
+  # --
   def total_conditions(self):
     return len(self.conditions)
-  # --------------------------------------------------------------------
-  def total_branches(self):
-    return len(self.branches)+len(self.switches)
-  # --------------------------------------------------------------------
+  # --
+  def total_decisions(self):
+    return len(self.decisions)
+  # --
   def total_blocks(self):
     return len(self.blocks)
-  # --------------------------------------------------------------------
+  # --
   def covered_conditions(self):
     count = 0
     for acondition in self.conditions:
@@ -127,88 +128,78 @@ class CoverageData:
       if condition.isFullyCovered():
         count += 1
     return count
-  # --------------------------------------------------------------------
+  # --
   def covered_blocks(self):
     count = 0
-    for astatement in self.blocks:
-      block = self.blocks[astatement]
+    for ablock in self.blocks:
+      block = self.blocks[ablock]
       if block.isFullyCovered():
         count += 1
     return count
-  # --------------------------------------------------------------------
-  def covered_branches(self):
+  # --
+  def covered_decisions(self):
     count = 0
-    for abranch in self.branches:
-      branch = self.branches[abranch]
-      if branch.isFullyCovered():
-        count += 1
-    for aswitch in self.switches:
-      switch = self.switches[aswitch]
-      if switch.isFullyCovered():
+    for adecision in self.decisions:
+      decision = self.decisions[adecision]
+      if decision.isFullyCovered():
         count += 1
     return count
-  # --------------------------------------------------------------------
+  # --
   def append(self, in_string):
     # append a coverage entry from the ECOV to the correct storage
     # pool. Also separates out the basic block and line entry coverage
-    (label, location, text) = in_string.split(":", maxsplit=2)
+    (location, coverage) = in_string.split(":", maxsplit=2)
     (line, col) = location.split(".")
     line = int(line)
     col = int(col)
 
     value = CoverageEntry()
-    value.label   = label
-    value.text    = text
+    value.coverage = coverage
     value.line    = line
     value.column  = col
     value.trues   = 0
     value.false   = 0
 
-    if "CD" in label and not label in self.conditions:
-      self.conditions[label] = value
-    elif "BR" in label and not label in self.branches:
-      self.branches[label] = value
-    elif "SW" in label and not label in self.switches:
-      self.switches[label] = value
-    elif "BL" in label and not label in self.blocks:
-      self.blocks[label] = value
-    if not line in self.entries_by_line and not "BL" in label:
+    if coverage == "C" and location not in self.conditions:
+      self.conditions[location] = value
+    elif coverage == "D" and location not in self.decisions:
+      self.decisions[location] = value
+    elif coverage == "B" and location not in self.blocks:
+      self.blocks[location] = value
+    if not line in self.entries_by_line and coverage != "B":
       self.entries_by_line[line] = list()
-    if not "BL" in label:
+    if coverage != "B":
       self.entries_by_line[line].append(value)
     else:
-      self.block_lines[line] = label
-  # --------------------------------------------------------------------
+      self.block_lines[line] = location
+  # --
   def cover(self, in_string):
     # Increments the coverage count for a given entity
-    (label, value) = in_string.split(":")
+    (location, coverage, value) = in_string.split(":")
 
     entry = None
-    if "CD" in label:
-      if label in self.conditions:
-        entry = self.conditions[label]
-    elif "BR" in label:
-      if label in self.branches:
-        entry = self.branches[label]
-    elif "SW" in label:
-      if label in self.switches:
-        entry = self.switches[label]
-    elif "BL" in label:
-      if label in self.blocks:
-        entry = self.blocks[label]
+    if coverage == "C":
+      if location in self.conditions:
+        entry = self.conditions[location]
+    elif coverage == "D":
+      if location in self.decisions:
+        entry = self.decisions[location]
+    elif coverage == "B":
+      if location in self.blocks:
+        entry = self.blocks[location]
     if entry:
       if value == "0":
         entry.falses += 1
       else:
         entry.trues += 1
-# ======================================================================
+# ==
 class Report:
   def __init__(self):
     self.use_html = False
-  # --------------------------------------------------------------------
+  # --
   def useHTML(self):
     self.use_html = True
-  # --------------------------------------------------------------------
+  # --
   def check_all(self, cwd="."):
     # grabs each edat within the directory and passes it
     # purely to check_file
@@ -216,7 +207,7 @@ class Report:
     for file in files:
       if file.endswith(".edat"):
         self.check_file(os.path.abspath(file))
-  # --------------------------------------------------------------------
+  # --
   def check_file(self,edat):
     # verify that the edat, ecov and source files exist before attempting
     # to parse anything
@@ -244,7 +235,7 @@ class Report:
         print(ecov + " does not exist...nothing to do", file=sys.stderr)
     else:
       print(edat + " does not exist...nothing to do", file=sys.stderr)
-  # --------------------------------------------------------------------
+  # --
   def parse_edat(self, edat, coverage_data):
     with open(edat, "r") as FIN:
       for line in FIN:
@@ -252,7 +243,7 @@ class Report:
           line = line.strip()
           if ":" in line:
             coverage_data.append(line)
-  # --------------------------------------------------------------------
+  # --
   def parse_ecov(self, ecov, coverage_data):
     with open(ecov, "r") as FIN:
       for line in FIN:
@@ -260,7 +251,7 @@ class Report:
           line = line.strip()
           if ":" in line:
             coverage_data.cover(line)
-  # --------------------------------------------------------------------
+  # --
   def report(self, source, coverage_data):
     is_py_src = source.endswith(".py")
     # print the report based on the edat name/location
@@ -344,15 +335,15 @@ class Report:
         print("=====",file=FOUT)
       print("",file=FOUT)
       # print the summary
-      branch_data = "%0.6d/%0.6d" % (coverage_data.covered_branches(), coverage_data.total_branches())
-      condition_data = "%0.6d/%0.6d" % (coverage_data.covered_conditions(), coverage_data.total_conditions())
-      block_data = "%0.6d/%0.6d" % (coverage_data.covered_blocks(), coverage_data.total_blocks())
+      decision_data = "%0.5d/%0.5d" % (coverage_data.covered_decisions(), coverage_data.total_decisions())
+      condition_data = "%0.5d/%0.5d" % (coverage_data.covered_conditions(), coverage_data.total_conditions())
+      block_data = "%0.5d/%0.5d" % (coverage_data.covered_blocks(), coverage_data.total_blocks())
 
       if self.use_html:
-        if coverage_data.covered_branches() != coverage_data.total_branches():
-          branch_data = "<span class=\"summary_miss\">" + branch_data + "</span>"
+        if coverage_data.covered_decisions() != coverage_data.total_decisions():
+          decision_data = "<span class=\"summary_miss\">" + decision_data + "</span>"
         else:
-          branch_data = "<span class=\"summary_pass\">" + branch_data + "</span>"
+          decision_data = "<span class=\"summary_pass\">" + decision_data + "</span>"
         if coverage_data.covered_conditions() != coverage_data.total_conditions():
           condition_data = "<span class=\"summary_miss\">" + condition_data + "</span>"
         else:
@@ -362,7 +353,7 @@ class Report:
         else:
           block_data = "<span class=\"summary_pass\">" + block_data + "</span>"
 
-      print("Branches:   " + branch_data,file=FOUT)
+      print("Decisions:  " + decision_data,file=FOUT)
       print("Conditions: " + condition_data,file=FOUT)
       print("Blocks:     " + block_data,file=FOUT)
       print("",file=FOUT)
@@ -378,13 +369,13 @@ class Report:
             my_str = "Missing T case    |" + my_str
           else:
             my_str = "Missing F case    |" + my_str
-          my_str = re.sub("\|\s+", "|", my_str)
+          my_str = re.sub("\|\s+\^", "", my_str)
           print(my_str,file=FOUT)
 
       if self.use_html:
         print("</pre></td></tr></table></body></html>",file=FOUT)
 
-  # --------------------------------------------------------------------
+  # --
   def check(self, edat, ecov, source=None):
     # Create the coverage data, populate it and dump the report
     # assuming all 3 files have already been validated and exist
@@ -392,7 +383,7 @@ class Report:
     self.parse_edat(edat, coverage_data)
     self.parse_ecov(ecov, coverage_data)
     self.report(source, coverage_data)
-# ======================================================================
+# ==
 if __name__ == "__main__":
   # The following operation modes need to be supported
   # #1) No arguments
@@ -408,7 +399,7 @@ if __name__ == "__main__":
   # All modes name the report after the EDAT file processed
   #
   # Additional options:
-  # -html
+  # --html
   #   Generate reports in HTML
   report = Report()
   if len(sys.argv) > 1:
