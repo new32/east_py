@@ -3,7 +3,7 @@ A suite of unit testing tools and classes for test development.
 
 ## License (ISC)
 ```
-Copyright (c) 2017, Arthur Gardiner
+Copyright (c) 2017, newbie32
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
